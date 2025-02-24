@@ -1,8 +1,7 @@
 # prod
-out/
+dist/
 
 # dev
-.next/
 .yarn/
 !.yarn/releases
 .vscode/*
@@ -14,10 +13,12 @@ out/
 
 # deps
 node_modules/
+.wrangler
 
 # env
 .env
 .env.production
+.dev.vars
 
 # logs
 logs/

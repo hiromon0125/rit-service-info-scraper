@@ -4,9 +4,6 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-02-24",
   "minify": true,
-  "alias": {
-    "node-fetch": "./fetch-nolyfill"
-  },
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
@@ -18,7 +15,7 @@
     "dev": {
       "vars": {
         "TARGET_URL": "https://www.rit.edu/parking/campus-shuttles",
-        "NODE_ENV": "development",
+        "NODE_ENV": "development"
       },
       "kv_namespaces": [
         {

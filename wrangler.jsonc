@@ -2,19 +2,44 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "rit-service-info-scraper",
   "main": "src/index.ts",
-  "compatibility_date": "2025-02-24"
+  "compatibility_date": "2025-02-24",
+  "minify": true,
+  "alias": {
+    "node-fetch": "./fetch-nolyfill"
+  },
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
+  "vars": {
+    "TARGET_URL": "https://www.rit.edu/parking/campus-shuttles",
+    "NODE_ENV": "production"
+  },
+  "env": {
+    "dev": {
+      "vars": {
+        "TARGET_URL": "https://www.rit.edu/parking/campus-shuttles",
+        "NODE_ENV": "development",
+      },
+      "kv_namespaces": [
+        {
+          "binding": "<TEST_NAMESPACE>",
+          "id": "<TEST_ID>"
+        }
+      ]
+    }
+  },
+  "routes": [
+    {
+      "pattern": "service-info.rit-bus.app",
+      "custom_domain": true
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "<TEST_NAMESPACE>",
+      "id": "<TEST_ID>"
+    }
+  ]
   // "r2_buckets": [
   //   {
   //     "binding": "MY_BUCKET",

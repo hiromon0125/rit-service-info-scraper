@@ -1,16 +1,17 @@
 {
-  "name": "rit-service-info-scraper",
-  "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify"
-  },
-  "dependencies": {
-    "axios": "^1.7.9",
-    "hono": "^4.7.2"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250214.0",
-    "wrangler": "^3.109.2"
-  },
-  "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af"
+	"name": "rit-service-info-scraper",
+	"scripts": {
+		"dev": "wrangler dev --env dev",
+		"deploy": "wrangler deploy --minify"
+	},
+	"dependencies": {
+		"axios": "^1.7.9",
+		"cheerio": "^1.0.0",
+		"hono": "^4.7.2"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250214.0",
+		"wrangler": "^3.109.2"
+	},
+	"packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af"
 }

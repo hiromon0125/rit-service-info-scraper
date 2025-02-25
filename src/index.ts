@@ -106,7 +106,6 @@ app.get('/', async (c) => {
 			};
 		})
 	);
-	console.log('Final values:', finalValues);
 
 	let errorList;
 	if (
@@ -131,7 +130,6 @@ app.get('/', async (c) => {
 		timestamp: number;
 		isNew: boolean;
 	}>[];
-	console.log('Final values:', finalValuesResolved);
 
 	return c.json({
 		targetUrl,

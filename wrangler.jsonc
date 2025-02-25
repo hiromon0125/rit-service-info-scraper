@@ -15,12 +15,12 @@
     "dev": {
       "vars": {
         "TARGET_URL": "https://www.rit.edu/parking/campus-shuttles",
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
       },
       "kv_namespaces": [
         {
-          "binding": "testing",
-          "id": "test123"
+          "binding": "KV",
+          "id": "adb6acbb0bdf46a5b9ab41cabc3a99d1"
         }
       ]
     }
@@ -33,8 +33,8 @@
   ],
   "kv_namespaces": [
     {
-      "binding": "testing",
-      "id": "test123"
+      "binding": "KV",
+      "id": "adb6acbb0bdf46a5b9ab41cabc3a99d1"
     }
   ]
   // "r2_buckets": [

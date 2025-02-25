@@ -18,7 +18,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           environment: production
           packageManager: pnpm
-          command: deploy-prod
+          command: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SERCRET_KEY: ${{ secrets.SECRET_KEY }}

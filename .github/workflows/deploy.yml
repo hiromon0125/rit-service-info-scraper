@@ -17,7 +17,6 @@ jobs:
           environment: production
           packageManager: pnpm
           command: run deploy
-          workingDirectory: ./src
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SERCRET_KEY: ${{ secrets.SECRET_KEY }}

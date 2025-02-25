@@ -37,12 +37,6 @@
       ]
     }
   },
-  "routes": [
-    {
-      "pattern": "serviceinfo.rit-bus.app",
-      "custom_domain": true
-    }
-  ],
   "kv_namespaces": [
     {
       "binding": "KV",

@@ -39,7 +39,7 @@
   },
   "routes": [
     {
-      "pattern": "service-info.rit-bus.app",
+      "pattern": "serviceinfo.rit-bus.app",
       "custom_domain": true
     }
   ],

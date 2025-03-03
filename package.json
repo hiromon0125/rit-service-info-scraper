@@ -5,7 +5,6 @@
 		"deploy-prod": "wrangler deploy --minify"
 	},
 	"dependencies": {
-		"axios": "^1.7.9",
 		"cheerio": "^1.0.0",
 		"hono": "^4.7.2"
 	},

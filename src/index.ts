@@ -50,7 +50,7 @@ app.get('/', async (c) => {
 				const title = sanitizedText[0];
 				const buses = sanitizedText[1]
 					.replace(/,?\s+and\s+/g, ', ') // Normalize "and" as a separator
-					.split(/,\s*|\s+/) // Split by commas or spaces
+					.split(/,\s*/) // Split by commas or spaces
 					.map((item) => item.trim()) // Trim spaces
 					.filter((item) => item.length > 0); // Remove empty entries
 				const newAcc = [...acc, { title, buses }];

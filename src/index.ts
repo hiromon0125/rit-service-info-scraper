@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { md5 } from 'hono/utils/crypto';
@@ -6,6 +7,7 @@ import { md5 } from 'hono/utils/crypto';
 type Bindings = {
 	TARGET_URL: string;
 	SECRET_KEY: string;
+	GTFS_URL: string;
 	NODE_ENV: string;
 	KV: KVNamespace;
 };
@@ -137,6 +139,29 @@ app.get('/', async (c) => {
 		targetUrl,
 		data: finalValuesResolved.map((value) => value.value),
 	});
+});
+
+app.get('/vehiclePositions', async (c) => {
+	try {
+		const response = await fetch(c.env.GTFS_URL);
+		if (!response.ok) {
+			throw new Error(
+				`${response.url}: ${response.status} ${response.statusText}`
+			);
+		}
+		const buffer = await response.arrayBuffer();
+		const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(
+			new Uint8Array(buffer)
+		);
+		console.log('feed', feed);
+
+		feed.entity.forEach((entity) => {
+			console.log(entity.vehicle);
+		});
+		return c.json({ feed });
+	} catch (error) {
+		console.log(error);
+	}
 });
 
 export default app;

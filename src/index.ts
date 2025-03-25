@@ -61,7 +61,7 @@ app.get('/', async (c) => {
 			}
 		}, [] as { title?: string; content?: string; buses: string[] }[]);
 	if (text.filter((item) => item.title || item.content).length === 0) {
-		return c.json({ error: 'No valid data found' }, 500);
+		return c.json({ targetUrl, data: [] }); // No message found
 	}
 	// Generate hashes for each object stringified
 	const hashes = await Promise.allSettled(

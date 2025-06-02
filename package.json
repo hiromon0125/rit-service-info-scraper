@@ -6,7 +6,7 @@
 	},
 	"dependencies": {
 		"cheerio": "^1.0.0",
-		"hono": "^4.7.9"
+		"hono": "^4.7.11"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250519.0",

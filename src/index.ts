@@ -1,141 +1,91 @@
-import * as cheerio from 'cheerio';
+import { GoogleGenAI } from '@google/genai';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { md5 } from 'hono/utils/crypto';
+import aiExtraction from './aiExtraction';
+import { fetchText } from './fetch';
+import { CACHED_DATA_SCHEMA, CachedData } from './zodSchema';
 
 type Bindings = {
 	TARGET_URL: string;
 	SECRET_KEY: string;
+	GEMINI_KEY: string;
 	NODE_ENV: string;
 	KV: KVNamespace;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+type Variables = {
+	ai: GoogleGenAI;
+};
 
-app.use(logger()).use('*', async (c, next) => {
-	if (!c.env.SECRET_KEY) {
-		return c.text('SECRET_KEY is not set', 500);
-	}
-	if (
-		c.env.NODE_ENV != 'development' &&
-		c.env.SECRET_KEY !== c.req.header('X-Secret-Key')
-	) {
-		return c.text('Unauthorized', 401);
-	}
+type Env = {
+	Bindings: Bindings;
+	Variables: Variables;
+};
 
-	await next();
-});
+const app = new Hono<Env>();
+
+app.use(logger())
+	.use('*', async (c, next) => {
+		if (!c.env.SECRET_KEY) {
+			return c.text('SECRET_KEY is not set', 500);
+		}
+		if (
+			c.env.NODE_ENV != 'development' &&
+			c.env.SECRET_KEY !== c.req.header('X-Secret-Key')
+		) {
+			return c.text('Unauthorized', 401);
+		}
+
+		await next();
+	})
+	.use(async (c, next) => {
+		const ai = new GoogleGenAI({ apiKey: c.env.GEMINI_KEY });
+		c.set('ai', ai);
+		await next();
+	});
+
 app.get('/', async (c) => {
 	const targetUrl = c.env.TARGET_URL;
-	if (!targetUrl) {
-		return c.text('TARGET_URL is not set', 500);
-	}
+	if (!targetUrl) return c.json({ error: 'TARGET_URL is not set' }, 500);
 
-	const response = await fetch(targetUrl);
-	if (!response.ok) return c.json({ error: 'Failed to fetch data' }, 500);
+	const response = await fetchText(targetUrl);
+	if (!response.success) return c.json({ error: response.error }, 500);
+	const text = response.data;
+	if (text.length === 0) return c.json({ targetUrl, data: [] }); // No message found
 
-	const html = await response.text();
-	const $ = cheerio.load(html);
+	// Generate hashes for raw scraped text and use that to check cache
+	const hash = await md5(text);
+	if (hash == null) return c.json({ error: 'Failed to generate hash' }, 500);
+	const rawCached = await c.env.KV.get<CachedData>(hash, 'json');
+	const cached = CACHED_DATA_SCHEMA.safeParse(rawCached);
+	if (!cached.success) return c.json({ error: 'Failed to parse cache' }, 500);
+	if (cached.data)
+		return c.json({
+			targetUrl,
+			data: cached.data.map((i) => ({ ...i, isNew: false })),
+		});
 
-	// Extract some example data (e.g., all headings)
-	const text = $('p.h3')
-		.parent()
-		.map((_, el) => $(el).text().split('\n'))
-		.get()
-		.filter((text) => text.trim() !== '')
-		.slice(1)
-		.reduce((acc, text, index) => {
-			if (index % 2 !== 1) {
-				const sanitizedText = text.trim().split(':');
-				const title = sanitizedText[0];
-				const buses = sanitizedText[1]
-					.replace(/,?\s+and\s+/g, ', ') // Normalize "and" as a separator
-					.split(/,\s*/) // Split by commas or spaces
-					.map((item) => item.trim()) // Trim spaces
-					.filter((item) => item.length > 0); // Remove empty entries
-				const newAcc = [...acc, { title, buses }];
-				return newAcc;
-			} else {
-				acc[acc.length - 1].content = text.trim();
-				return acc;
-			}
-		}, [] as { title?: string; content?: string; buses: string[] }[]);
-	if (text.filter((item) => item.title || item.content).length === 0) {
-		return c.json({ targetUrl, data: [] }); // No message found
-	}
-	// Generate hashes for each object stringified
-	const hashes = await Promise.allSettled(
-		text.map(async (item) => {
-			const jsonText = JSON.stringify(item);
-			return { hash: await md5(jsonText), data: item };
-		})
-	);
-	if (
-		!hashes.every((hash) => hash.status != 'rejected') ||
-		hashes.map((hash) => hash.value.hash).includes(null)
-	) {
-		return c.json({ error: 'Failed to generate hashes' }, 500);
-	}
+	const aiResponse = await aiExtraction(c.get('ai'), text);
+	if (!aiResponse.success)
+		return c.json({
+			error: aiResponse.error,
+		});
+	const { data } = aiResponse;
+	if (data.length === 0) return c.json({ targetUrl, data: [] }); // No message found
 
-	// Check if the hashes are already in the cache
-	// If not, store the new values in the cache with the current timestamp
-	// If yes, return the cached values
-	const finalValues = await Promise.allSettled(
-		(
-			hashes as PromiseFulfilledResult<{
-				hash: string;
-				data: { title: string; content: string; buses: string[] };
-			}>[]
-		).map(async (hash) => {
-			const cached = await c.env.KV.get<{
-				title?: string;
-				content?: string;
-				buses: string[];
-				hash: string;
-				timestamp: number;
-			}>(hash.value.hash, 'json');
+	const finalData = data.map((d) => ({
+		...d,
+		hash,
+		timestamp: Date.now(),
+		isNew: true,
+	}));
 
-			if (cached) return { ...cached, isNew: false };
-			const newValue = {
-				...hash.value.data,
-				hash: hash.value.hash,
-				timestamp: Date.now(),
-			};
-			await c.env.KV.put(hash.value.hash, JSON.stringify(newValue));
-			return {
-				...newValue,
-				isNew: true,
-			};
-		})
-	);
-
-	let errorList;
-	if (
-		(errorList = finalValues.filter((value) => value.status == 'rejected'))
-			.length > 0
-	) {
-		return c.json(
-			{
-				error: 'Failed to generate final values',
-				...(c.env.NODE_ENV == 'development'
-					? { error_objects: errorList }
-					: {}),
-			},
-			500
-		);
-	}
-	const finalValuesResolved = finalValues as PromiseFulfilledResult<{
-		title: string;
-		content: string;
-		buses: string[];
-		hash: string;
-		timestamp: number;
-		isNew: boolean;
-	}>[];
+	await c.env.KV.put(hash, JSON.stringify(finalData));
 
 	return c.json({
 		targetUrl,
-		data: finalValuesResolved.map((value) => value.value),
+		data: finalData,
 	});
 });
 

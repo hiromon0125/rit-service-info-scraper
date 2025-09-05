@@ -38,7 +38,7 @@ app.get('/', async (c) => {
 	const $ = cheerio.load(html);
 
 	// Extract some example data (e.g., all headings)
-	const text = $('p.h1')
+	const text = $('p.h3')
 		.parent()
 		.map((_, el) => $(el).text().split('\n'))
 		.get()

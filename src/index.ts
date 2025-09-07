@@ -58,13 +58,16 @@ app.get('/', async (c) => {
 	const hash = await md5(text);
 	if (hash == null) return c.json({ error: 'Failed to generate hash' }, 500);
 	const rawCached = await c.env.KV.get<CachedData>(hash, 'json');
-	const cached = CACHED_DATA_SCHEMA.safeParse(rawCached);
-	if (!cached.success) return c.json({ error: 'Failed to parse cache' }, 500);
-	if (cached.data)
-		return c.json({
-			targetUrl,
-			data: cached.data.map((i) => ({ ...i, isNew: false })),
-		});
+	if (rawCached != null) {
+		const cached = CACHED_DATA_SCHEMA.safeParse(rawCached);
+		if (!cached.success)
+			return c.json({ error: 'Failed to parse cache' }, 500);
+		if (cached.data)
+			return c.json({
+				targetUrl,
+				data: cached.data.map((i) => ({ ...i, isNew: false })),
+			});
+	}
 
 	const aiResponse = await aiExtraction(c.get('ai'), text);
 	if (!aiResponse.success)

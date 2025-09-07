@@ -62,13 +62,15 @@ app.get('/', async (c) => {
 		const cached = CACHED_DATA_SCHEMA.safeParse(rawCached);
 		if (!cached.success)
 			return c.json({ error: 'Failed to parse cache' }, 500);
-		if (cached.data)
+		if (cached.data) {
+			console.log('Cache found! Returning data.');
 			return c.json({
 				targetUrl,
 				data: cached.data.map((i) => ({ ...i, isNew: false })),
 			});
+		}
 	}
-
+	console.log('Cache missed extracting new info alert!');
 	const aiResponse = await aiExtraction(c.get('ai'), text);
 	if (!aiResponse.success)
 		return c.json({
@@ -85,6 +87,7 @@ app.get('/', async (c) => {
 	}));
 
 	await c.env.KV.put(hash, JSON.stringify(finalData));
+	console.log('Done! Returning final response!');
 
 	return c.json({
 		targetUrl,

@@ -15,8 +15,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       hono:
-        specifier: ^4.9.9
-        version: 4.9.9
+        specifier: ^4.10.5
+        version: 4.10.5
       zod:
         specifier: ^4.1.11
         version: 4.1.11
@@ -534,8 +534,8 @@ packages:
     resolution: {integrity: sha512-+CqsMbHPiSTdtSO14O51eMNlrp9N79gmeqmXeouJOhfucAedHw9noVe/n5uJk3tbKE6a+6ZCQg3RPhVhHByAIw==}
     engines: {node: '>=18'}
 
-  hono@4.9.9:
-    resolution: {integrity: sha512-Hxw4wT6zjJGZJdkJzAx9PyBdf7ZpxaTSA0NfxqjLghwMrLBX8p33hJBzoETRakF3UJu6OdNQBZAlNSkGqKFukw==}
+  hono@4.10.5:
+    resolution: {integrity: sha512-h/MXuTkoAK8NG1EfDp0jI1YLf6yGdDnfkebRO2pwEh5+hE3RAJFXkCsnD0vamSiARK4ZrB6MY+o3E/hCnOyHrQ==}
     engines: {node: '>=16.9.0'}
 
   htmlparser2@10.0.0:
@@ -1131,7 +1131,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  hono@4.9.9: {}
+  hono@4.10.5: {}
 
   htmlparser2@10.0.0:
     dependencies:

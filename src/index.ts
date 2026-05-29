@@ -10,6 +10,7 @@ type Bindings = {
 	TARGET_URL: string;
 	SECRET_KEY: string;
 	GEMINI_KEY: string;
+	MODEL_ID: string;
 	NODE_ENV: string;
 	KV: KVNamespace;
 };
@@ -25,7 +26,8 @@ type Env = {
 
 const app = new Hono<Env>();
 
-app.use(logger())
+app
+	.use(logger())
 	.use('*', async (c, next) => {
 		if (!c.env.SECRET_KEY) {
 			return c.text('SECRET_KEY is not set', 500);
@@ -60,22 +62,19 @@ app.get('/', async (c) => {
 	const rawCached = await c.env.KV.get<CachedData>(hash, 'json');
 	if (rawCached != null) {
 		const cached = CACHED_DATA_SCHEMA.safeParse(rawCached);
-		if (!cached.success)
-			return c.json({ error: 'Failed to parse cache' }, 500);
+		if (!cached.success) return c.json({ error: 'Failed to parse cache' }, 500);
 		if (cached.data) {
-			console.log('Cache found! Returning data.');
+			const lastHash = await c.env.KV.get('last_hash');
+			if (lastHash !== hash) await c.env.KV.put('last_hash', hash);
 			return c.json({
 				targetUrl,
-				data: cached.data.map((i) => ({ ...i, isNew: false })),
+				data: cached.data.map((i) => ({ ...i, isNew: lastHash !== hash })),
 			});
 		}
 	}
 	console.log('Cache missed extracting new info alert!');
-	const aiResponse = await aiExtraction(c.get('ai'), text);
-	if (!aiResponse.success)
-		return c.json({
-			error: aiResponse.error,
-		});
+	const aiResponse = await aiExtraction(c.get('ai'), c.env.MODEL_ID, text);
+	if (!aiResponse.success) return c.json({ error: aiResponse.error }, 500);
 	const { data } = aiResponse;
 	if (data.length === 0) return c.json({ targetUrl, data: [] }); // No message found
 
@@ -85,8 +84,10 @@ app.get('/', async (c) => {
 		timestamp: Date.now(),
 		isNew: true,
 	}));
-
-	await c.env.KV.put(hash, JSON.stringify(finalData));
+	await Promise.all([
+		c.env.KV.put(hash, JSON.stringify(finalData)),
+		c.env.KV.put('last_hash', hash),
+	]);
 	console.log('Done! Returning final response!');
 
 	return c.json({

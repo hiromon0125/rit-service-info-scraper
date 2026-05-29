@@ -1,9 +1,13 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { AI_EXTRACTED_DATA_SCHEMA } from './zodSchema';
 
-export default async function aiExtraction(ai: GoogleGenAI, text: string) {
+export default async function aiExtraction(
+	ai: GoogleGenAI,
+	model: string,
+	text: string,
+) {
 	const response = await ai.models.generateContent({
-		model: 'gemini-2.5-flash',
+		model,
 		contents:
 			`Instruction:
         Extract the title, bus number, and content from the following text.
